@@ -107,7 +107,7 @@ export function CryptoVoteApp({ election }: CryptoVoteAppProps) {
     loadElectionState();
   }, []);
 
-  const selectedCandidate = liveElection.candidates.find(
+  const selectedCandidate = (liveElection.candidates || []).find(
     (candidate) => candidate.id === selectedCandidateId,
   );
   const turnout = getTurnoutPercentage(
@@ -116,7 +116,7 @@ export function CryptoVoteApp({ election }: CryptoVoteAppProps) {
   );
   const chartData = useMemo(
     () =>
-      liveElection.candidates.map((candidate) => ({
+      (liveElection.candidates || []).map((candidate) => ({
         name: candidate.name.split(" ")[0],
         votes: candidate.votes,
         percent: getCandidatePercent(candidate.votes, liveElection.ballotsCast),
@@ -135,7 +135,7 @@ export function CryptoVoteApp({ election }: CryptoVoteAppProps) {
 
   function checkVoter() {
     const normalizedInput = voterIdentifier.trim().toLowerCase();
-    const foundVoter = liveElection.authorizedVoters.find((voter) =>
+    const foundVoter = (liveElection.authorizedVoters || []).find((voter) =>
       getVoterLookupValues(voter).some((value) => value === normalizedInput),
     );
 
@@ -178,7 +178,7 @@ export function CryptoVoteApp({ election }: CryptoVoteAppProps) {
 
     const nextReceipt = createReceipt(
       selectedCandidateId,
-      liveElection.candidates.map((candidate) => candidate.id),
+      (liveElection.candidates || []).map((candidate) => candidate.id),
       new Date(),
       electionPublicKey,
     );
@@ -392,7 +392,7 @@ export function CryptoVoteApp({ election }: CryptoVoteAppProps) {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {liveElection.candidates.map((candidate) => {
+            {(liveElection.candidates || []).map((candidate) => {
               const selected = selectedCandidateId === candidate.id;
 
               return (
@@ -439,7 +439,7 @@ export function CryptoVoteApp({ election }: CryptoVoteAppProps) {
               );
             })}
 
-            {liveElection.candidates.length === 0 ? (
+            {(liveElection.candidates || []).length === 0 ? (
               <div className="rounded-lg border border-dashed bg-background p-4 text-sm leading-6 text-muted-foreground">
                 Kandidat belum tersedia. Admin harus login ke /admin dan mengisi
                 data pemilihan terlebih dahulu.
