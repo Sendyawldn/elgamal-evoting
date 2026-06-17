@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { useMemo, useState } from "react"
+import { useMemo, useState } from "react";
 import {
   KeyRound,
   LockKeyhole,
@@ -10,117 +10,131 @@ import {
   ShieldCheck,
   Square,
   Trash2,
-  UserCheck
-} from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+  UserCheck,
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
-} from "@/components/ui/card"
-import type { Candidate, Election, ElectionStatus } from "../types"
-import { apiGet, apiPost, apiPut, ADMIN_HEADERS } from "@/lib/api-client"
+  CardTitle,
+} from "@/components/ui/card";
+import type { Candidate, Election, ElectionStatus } from "../types";
+import { apiGet, apiPost, apiPut, ADMIN_HEADERS } from "@/lib/api-client";
 type AdminPanelProps = {
-  election: Election
-}
+  election: Election;
+};
 
-const adminEmail = "admin@kampus.test"
-const adminPassword = "admin123"
+const adminEmail = "admin@kampus.test";
+const adminPassword = "admin123";
 
 export function AdminPanel({ election }: AdminPanelProps) {
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [loginEmail, setLoginEmail] = useState(adminEmail)
-  const [password, setPassword] = useState("")
-  const [loginMessage, setLoginMessage] = useState("Login admin diperlukan untuk membuka kontrol penuh.")
-  const [managedElection, setManagedElection] = useState(election)
-  const [history, setHistory] = useState<Election[]>([])
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loginEmail, setLoginEmail] = useState(adminEmail);
+  const [password, setPassword] = useState("");
+  const [loginMessage, setLoginMessage] = useState(
+    "Login admin diperlukan untuk membuka kontrol penuh.",
+  );
+  const [managedElection, setManagedElection] = useState(election);
+  const [history, setHistory] = useState<Election[]>([]);
   const [candidateDraft, setCandidateDraft] = useState({
     name: "",
     party: "",
-    platform: ""
-  })
-  const [voterIdentifierDraft, setVoterIdentifierDraft] = useState("")
-  const [adminMessage, setAdminMessage] = useState("Admin memiliki full access atas konfigurasi demo.")
-  const [finalTally, setFinalTally] = useState<Record<string, number> | null>(null)
-  const [aggregationLogs, setAggregationLogs] = useState<string[]>([])
-  const [isDecrypting, setIsDecrypting] = useState(false)
+    platform: "",
+  });
+  const [voterIdentifierDraft, setVoterIdentifierDraft] = useState("");
+  const [adminMessage, setAdminMessage] = useState(
+    "Admin memiliki full access atas konfigurasi demo.",
+  );
+  const [finalTally, setFinalTally] = useState<Record<string, number> | null>(
+    null,
+  );
+  const [aggregationLogs, setAggregationLogs] = useState<string[]>([]);
+  const [isDecrypting, setIsDecrypting] = useState(false);
 
   const votedNames = useMemo(
     () =>
       managedElection.authorizedVoters
         .filter((voter) => voter.hasVoted)
         .map((voter) => voter.identifier || voter.email),
-    [managedElection.authorizedVoters]
-  )
+    [managedElection.authorizedVoters],
+  );
   const hasConfiguredElection = Boolean(
     managedElection.title.trim() &&
     managedElection.description.trim() &&
     managedElection.region.trim() &&
     managedElection.candidates.length >= 2 &&
-    managedElection.authorizedVoters.length > 0
-  )
-  const hasVotingSession = managedElection.status !== "draft" || managedElection.ballotsCast > 0
+    managedElection.authorizedVoters.length > 0,
+  );
+  const hasVotingSession =
+    managedElection.status !== "draft" || managedElection.ballotsCast > 0;
 
   async function loadElectionState() {
     try {
-      const body = await apiGet<{ election: Election; history: Election[] }>("/api/admin/election", { headers: ADMIN_HEADERS })
-      setManagedElection(body.election)
-      setHistory(body.history ?? [])
+      const body = await apiGet<{ election: Election; history: Election[] }>(
+        "/api/admin/election",
+        { headers: ADMIN_HEADERS },
+      );
+      setManagedElection(body.election);
+      setHistory(body.history ?? []);
     } catch (err) {
       // Handle error
     }
   }
 
   function login() {
-    if (loginEmail.trim().toLowerCase() === adminEmail && password === adminPassword) {
-      setIsLoggedIn(true)
-      setLoginMessage("Login berhasil. Admin panel terbuka.")
-      loadElectionState()
-      return
+    if (
+      loginEmail.trim().toLowerCase() === adminEmail &&
+      password === adminPassword
+    ) {
+      setIsLoggedIn(true);
+      setLoginMessage("Login berhasil. Admin panel terbuka.");
+      loadElectionState();
+      return;
     }
 
-    setLoginMessage("Email atau password admin salah.")
+    setLoginMessage("Email atau password admin salah.");
   }
 
   async function updateElectionStatus(status: ElectionStatus) {
-    if (
-      status === "open" &&
-      !hasConfiguredElection
-    ) {
-      setAdminMessage("Isi identitas pemilihan, minimal dua kandidat, dan DPT sebelum membuka pemilihan.")
-      return
+    if (status === "open" && !hasConfiguredElection) {
+      setAdminMessage(
+        "Isi identitas pemilihan, minimal dua kandidat, dan DPT sebelum membuka pemilihan.",
+      );
+      return;
     }
 
     if (status === "closed" && !hasVotingSession) {
-      setAdminMessage("Belum ada sesi vote. Mulai pemilihan terlebih dahulu.")
-      return
+      setAdminMessage("Belum ada sesi vote. Mulai pemilihan terlebih dahulu.");
+      return;
     }
 
-    const nextElection = { ...managedElection, status }
-    setManagedElection(nextElection)
+    const nextElection = { ...managedElection, status };
+    setManagedElection(nextElection);
     setAdminMessage(
       status === "open"
         ? "Pemilihan dibuka dan sesi aktif tersimpan. Halaman pemilih sudah bisa melihat kandidat."
         : status === "closed"
           ? "Pemilihan selesai. Admin dapat mendekripsi hasil akhir."
-          : "Pemilihan dikembalikan ke draft untuk pengaturan."
-    )
+          : "Pemilihan dikembalikan ke draft untuk pengaturan.",
+    );
 
-    await persistElectionState(nextElection)
+    await persistElectionState(nextElection);
   }
 
   function addCandidate() {
     if (managedElection.status !== "draft") {
-      setAdminMessage("Kandidat tidak bisa ditambahkan setelah pemilihan dimulai.")
-      return
+      setAdminMessage(
+        "Kandidat tidak bisa ditambahkan setelah pemilihan dimulai.",
+      );
+      return;
     }
 
     if (!candidateDraft.name.trim() || !candidateDraft.party.trim()) {
-      setAdminMessage("Nama dan kelompok kandidat wajib diisi.")
-      return
+      setAdminMessage("Nama dan kelompok kandidat wajib diisi.");
+      return;
     }
 
     const nextCandidate: Candidate = {
@@ -133,52 +147,54 @@ export function AdminPanel({ election }: AdminPanelProps) {
       party: candidateDraft.party.trim(),
       platform: candidateDraft.platform.trim() || "Platform belum diisi admin.",
       color: `var(--chart-${(managedElection.candidates.length % 4) + 1})`,
-      votes: 0
-    }
+      votes: 0,
+    };
 
     setManagedElection((current) => ({
       ...current,
-      candidates: [...current.candidates, nextCandidate]
-    }))
-    setCandidateDraft({ name: "", party: "", platform: "" })
-    setAdminMessage("Kandidat ditambahkan.")
+      candidates: [...current.candidates, nextCandidate],
+    }));
+    setCandidateDraft({ name: "", party: "", platform: "" });
+    setAdminMessage("Kandidat ditambahkan.");
   }
 
   function removeCandidate(candidateId: string) {
     if (managedElection.status !== "draft") {
-      setAdminMessage("Kandidat tidak bisa dihapus setelah pemilihan dimulai.")
-      return
+      setAdminMessage("Kandidat tidak bisa dihapus setelah pemilihan dimulai.");
+      return;
     }
 
     setManagedElection((current) => ({
       ...current,
-      candidates: current.candidates.filter((candidate) => candidate.id !== candidateId)
-    }))
-    setAdminMessage("Kandidat dihapus dari konfigurasi admin.")
+      candidates: current.candidates.filter(
+        (candidate) => candidate.id !== candidateId,
+      ),
+    }));
+    setAdminMessage("Kandidat dihapus dari konfigurasi admin.");
   }
 
   function addVoterIdentifier() {
     if (managedElection.status !== "draft") {
-      setAdminMessage("DPT tidak bisa ditambahkan setelah pemilihan dimulai.")
-      return
+      setAdminMessage("DPT tidak bisa ditambahkan setelah pemilihan dimulai.");
+      return;
     }
 
     if (!voterIdentifierDraft.trim()) {
-      setAdminMessage("Masukkan Email, ID, atau NIM pemilih.")
-      return
+      setAdminMessage("Masukkan Email, ID, atau NIM pemilih.");
+      return;
     }
 
-    const identifier = voterIdentifierDraft.trim()
-    const normalizedIdentifier = identifier.toLowerCase()
+    const identifier = voterIdentifierDraft.trim();
+    const normalizedIdentifier = identifier.toLowerCase();
     const alreadyExists = managedElection.authorizedVoters.some((voter) =>
       [voter.identifier, voter.id, voter.email]
         .filter(Boolean)
-        .some((value) => value.toLowerCase() === normalizedIdentifier)
-    )
+        .some((value) => value.toLowerCase() === normalizedIdentifier),
+    );
 
     if (alreadyExists) {
-      setAdminMessage("Pemilih ini sudah ada di DPT.")
-      return
+      setAdminMessage("Pemilih ini sudah ada di DPT.");
+      return;
     }
 
     setManagedElection((current) => ({
@@ -192,12 +208,12 @@ export function AdminPanel({ election }: AdminPanelProps) {
             ? identifier.toLowerCase()
             : `${identifier.toLowerCase().replace(/[^a-z0-9]+/g, "-")}@local.voter`,
           identifier,
-          hasVoted: false
-        }
-      ]
-    }))
-    setVoterIdentifierDraft("")
-    setAdminMessage("Pemilih ditambahkan ke DPT.")
+          hasVoted: false,
+        },
+      ],
+    }));
+    setVoterIdentifierDraft("");
+    setAdminMessage("Pemilih ditambahkan ke DPT.");
   }
 
   async function persistElectionState(electionToSave: Election) {
@@ -205,56 +221,63 @@ export function AdminPanel({ election }: AdminPanelProps) {
       const body = await apiPut<{ history?: Election[]; persistence?: string }>(
         "/api/admin/election",
         electionToSave,
-        ADMIN_HEADERS
-      )
-      setHistory(body.history ?? [])
-      setAdminMessage(`State admin disimpan ke ${body.persistence}.`)
+        ADMIN_HEADERS,
+      );
+      setHistory(body.history ?? []);
+      setAdminMessage(`State admin disimpan ke ${body.persistence}.`);
     } catch (err: any) {
-      setAdminMessage(err.message ?? "Gagal menyimpan state admin.")
+      setAdminMessage(err.message ?? "Gagal menyimpan state admin.");
     }
   }
 
   async function syncAdminState() {
     try {
-      const body = await apiPost<{ election: Election; history?: Election[]; persistence?: string }>(
-        "/api/admin/election",
-        managedElection,
-        ADMIN_HEADERS
-      )
-      setManagedElection(body.election)
-      setHistory(body.history ?? [])
-      setFinalTally(null)
-      setAdminMessage(`Sesi tersimpan ke riwayat ${body.persistence}. Form dikosongkan untuk sesi baru.`)
+      const body = await apiPost<{
+        election: Election;
+        history?: Election[];
+        persistence?: string;
+      }>("/api/admin/election", managedElection, ADMIN_HEADERS);
+      setManagedElection(body.election);
+      setHistory(body.history ?? []);
+      setFinalTally(null);
+      setAdminMessage(
+        `Sesi tersimpan ke riwayat ${body.persistence}. Form dikosongkan untuk sesi baru.`,
+      );
     } catch (err: any) {
-      setAdminMessage(err.message ?? "Gagal mengarsipkan sesi.")
+      setAdminMessage(err.message ?? "Gagal mengarsipkan sesi.");
     }
   }
 
   async function decryptFinalTally() {
     if (managedElection.status !== "closed") {
-      setAdminMessage("Tutup pemilihan sebelum menjalankan agregasi dan dekripsi.")
-      return
+      setAdminMessage(
+        "Tutup pemilihan sebelum menjalankan agregasi dan dekripsi.",
+      );
+      return;
     }
 
-    setIsDecrypting(true)
+    setIsDecrypting(true);
     setAggregationLogs([
       "Menghubungi ledger terenkripsi...",
-      "Menyiapkan operasi homomorphic..."
-    ])
+      "Menyiapkan operasi homomorphic...",
+    ]);
 
     try {
-      const body = await apiGet<{ tally: Record<string, number>; logs?: string[]; ledgerSize?: number }>(
-        "/api/admin/tally",
-        { headers: ADMIN_HEADERS }
-      )
-      setFinalTally(body.tally)
-      setAggregationLogs(body.logs ?? [])
-      setAdminMessage(`Agregasi selesai dari ${body.ledgerSize} receipt terenkripsi.`)
-      setIsDecrypting(false)
+      const body = await apiGet<{
+        tally: Record<string, number>;
+        logs?: string[];
+        ledgerSize?: number;
+      }>("/api/admin/tally", { headers: ADMIN_HEADERS });
+      setFinalTally(body.tally);
+      setAggregationLogs(body.logs ?? []);
+      setAdminMessage(
+        `Agregasi selesai dari ${body.ledgerSize} receipt terenkripsi.`,
+      );
+      setIsDecrypting(false);
     } catch (err: any) {
-      setAdminMessage(err.message ?? "Gagal menjalankan dekripsi tally.")
-      setAggregationLogs([])
-      setIsDecrypting(false)
+      setAdminMessage(err.message ?? "Gagal menjalankan dekripsi tally.");
+      setAggregationLogs([]);
+      setIsDecrypting(false);
     }
   }
 
@@ -269,7 +292,8 @@ export function AdminPanel({ election }: AdminPanelProps) {
             </Badge>
             <CardTitle className="text-3xl font-black">Login Admin</CardTitle>
             <CardDescription>
-              Masuk untuk mengelola kandidat, status pemilihan, dan dekripsi hasil akhir.
+              Masuk untuk mengelola kandidat, status pemilihan, dan dekripsi
+              hasil akhir.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -301,7 +325,7 @@ export function AdminPanel({ election }: AdminPanelProps) {
           </CardContent>
         </Card>
       </main>
-    )
+    );
   }
 
   return (
@@ -313,9 +337,10 @@ export function AdminPanel({ election }: AdminPanelProps) {
               <ShieldCheck className="size-3.5" aria-hidden="true" />
               Admin authorized
             </Badge>
-            <h1 className="text-4xl font-black sm:text-6xl">Admin CryptoVote</h1>
+            <h1 className="text-4xl font-black sm:text-6xl">Admin Evoting</h1>
             <p className="mt-3 max-w-3xl text-muted-foreground">
-              Full access untuk mengatur kandidat, status pemilihan, monitoring pemilih, dan dekripsi hasil.
+              Full access untuk mengatur kandidat, status pemilihan, monitoring
+              pemilih, dan dekripsi hasil.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -323,7 +348,9 @@ export function AdminPanel({ election }: AdminPanelProps) {
               type="button"
               variant="secondary"
               onClick={() => updateElectionStatus("open")}
-              disabled={managedElection.status !== "draft" || !hasConfiguredElection}
+              disabled={
+                managedElection.status !== "draft" || !hasConfiguredElection
+              }
             >
               <Play className="size-4" aria-hidden="true" />
               Mulai Pemilihan
@@ -337,7 +364,11 @@ export function AdminPanel({ election }: AdminPanelProps) {
               <Square className="size-4" aria-hidden="true" />
               Tutup Pemilihan
             </Button>
-            <Button type="button" onClick={syncAdminState} disabled={managedElection.status !== "closed"}>
+            <Button
+              type="button"
+              onClick={syncAdminState}
+              disabled={managedElection.status !== "closed"}
+            >
               <UserCheck className="size-4" aria-hidden="true" />
               Simpan State
             </Button>
@@ -349,7 +380,8 @@ export function AdminPanel({ election }: AdminPanelProps) {
         <CardHeader>
           <CardTitle>Identitas Pemilihan</CardTitle>
           <CardDescription>
-            Data ini kosong di awal dan harus diisi admin sebelum pemilihan dibuka.
+            Data ini kosong di awal dan harus diisi admin sebelum pemilihan
+            dibuka.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3 md:grid-cols-3">
@@ -359,7 +391,10 @@ export function AdminPanel({ election }: AdminPanelProps) {
               className="h-11 rounded-md border bg-background px-3 outline-none focus-visible:ring-2 focus-visible:ring-ring"
               value={managedElection.title}
               onChange={(event) =>
-                setManagedElection((current) => ({ ...current, title: event.target.value }))
+                setManagedElection((current) => ({
+                  ...current,
+                  title: event.target.value,
+                }))
               }
               placeholder="Judul pemilihan"
             />
@@ -370,7 +405,10 @@ export function AdminPanel({ election }: AdminPanelProps) {
               className="h-11 rounded-md border bg-background px-3 outline-none focus-visible:ring-2 focus-visible:ring-ring"
               value={managedElection.region}
               onChange={(event) =>
-                setManagedElection((current) => ({ ...current, region: event.target.value }))
+                setManagedElection((current) => ({
+                  ...current,
+                  region: event.target.value,
+                }))
               }
               placeholder="Nama kampus/organisasi"
             />
@@ -381,7 +419,10 @@ export function AdminPanel({ election }: AdminPanelProps) {
               className="min-h-20 rounded-md border bg-background p-3 outline-none focus-visible:ring-2 focus-visible:ring-ring"
               value={managedElection.description}
               onChange={(event) =>
-                setManagedElection((current) => ({ ...current, description: event.target.value }))
+                setManagedElection((current) => ({
+                  ...current,
+                  description: event.target.value,
+                }))
               }
               placeholder="Deskripsi pemilihan"
             />
@@ -396,7 +437,9 @@ export function AdminPanel({ election }: AdminPanelProps) {
               <Settings className="size-5 text-primary" aria-hidden="true" />
               Manajemen Kandidat
             </CardTitle>
-            <CardDescription>Admin bisa menambah atau menghapus kandidat.</CardDescription>
+            <CardDescription>
+              Admin bisa menambah atau menghapus kandidat.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-3">
@@ -405,7 +448,10 @@ export function AdminPanel({ election }: AdminPanelProps) {
                 placeholder="Nama kandidat"
                 value={candidateDraft.name}
                 onChange={(event) =>
-                  setCandidateDraft((current) => ({ ...current, name: event.target.value }))
+                  setCandidateDraft((current) => ({
+                    ...current,
+                    name: event.target.value,
+                  }))
                 }
               />
               <input
@@ -413,7 +459,10 @@ export function AdminPanel({ election }: AdminPanelProps) {
                 placeholder="Kelompok atau partai"
                 value={candidateDraft.party}
                 onChange={(event) =>
-                  setCandidateDraft((current) => ({ ...current, party: event.target.value }))
+                  setCandidateDraft((current) => ({
+                    ...current,
+                    party: event.target.value,
+                  }))
                 }
               />
               <textarea
@@ -421,7 +470,10 @@ export function AdminPanel({ election }: AdminPanelProps) {
                 placeholder="Platform kandidat"
                 value={candidateDraft.platform}
                 onChange={(event) =>
-                  setCandidateDraft((current) => ({ ...current, platform: event.target.value }))
+                  setCandidateDraft((current) => ({
+                    ...current,
+                    platform: event.target.value,
+                  }))
                 }
               />
               <Button
@@ -443,7 +495,9 @@ export function AdminPanel({ election }: AdminPanelProps) {
                 >
                   <div>
                     <p className="font-semibold">{candidate.name}</p>
-                    <p className="text-sm text-muted-foreground">{candidate.party}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {candidate.party}
+                    </p>
                   </div>
                   <Button
                     type="button"
@@ -474,7 +528,9 @@ export function AdminPanel({ election }: AdminPanelProps) {
                 className="h-11 min-w-0 flex-1 rounded-md border bg-background px-3 outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 placeholder="Email / ID / NIM"
                 value={voterIdentifierDraft}
-                onChange={(event) => setVoterIdentifierDraft(event.target.value)}
+                onChange={(event) =>
+                  setVoterIdentifierDraft(event.target.value)
+                }
               />
               <Button
                 type="button"
@@ -493,8 +549,12 @@ export function AdminPanel({ election }: AdminPanelProps) {
                   className="flex items-center justify-between gap-3 rounded-md border bg-background p-3"
                 >
                   <div>
-                    <p className="font-semibold">{voter.identifier || voter.id}</p>
-                    <p className="text-sm text-muted-foreground">{voter.email}</p>
+                    <p className="font-semibold">
+                      {voter.identifier || voter.id}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {voter.email}
+                    </p>
                   </div>
                   <Badge variant={voter.hasVoted ? "verified" : "outline"}>
                     {voter.hasVoted ? "Sudah memilih" : "Belum"}
@@ -518,7 +578,8 @@ export function AdminPanel({ election }: AdminPanelProps) {
             Dekripsi Hasil Akhir
           </CardTitle>
           <CardDescription>
-            Private key dan fungsi dekripsi hanya berada di area admin setelah pemilihan selesai.
+            Private key dan fungsi dekripsi hanya berada di area admin setelah
+            pemilihan selesai.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -530,7 +591,10 @@ export function AdminPanel({ election }: AdminPanelProps) {
             <KeyRound className="size-4" aria-hidden="true" />
             {isDecrypting ? "Memproses Tally..." : "Dekripsi Tally Agregat"}
           </Button>
-          <div className="rounded-md border bg-background p-3" aria-live="polite">
+          <div
+            className="rounded-md border bg-background p-3"
+            aria-live="polite"
+          >
             <p className="text-sm font-semibold">Log Agregasi</p>
             <div className="mt-2 space-y-2 text-sm text-muted-foreground">
               {aggregationLogs.length > 0 ? (
@@ -540,7 +604,10 @@ export function AdminPanel({ election }: AdminPanelProps) {
                   </p>
                 ))
               ) : (
-                <p>Log akan muncul setelah pemilihan ditutup dan admin menjalankan dekripsi.</p>
+                <p>
+                  Log akan muncul setelah pemilihan ditutup dan admin
+                  menjalankan dekripsi.
+                </p>
               )}
             </div>
           </div>
@@ -563,7 +630,8 @@ export function AdminPanel({ election }: AdminPanelProps) {
         <CardHeader>
           <CardTitle>Riwayat Sesi</CardTitle>
           <CardDescription>
-            Sesi yang sudah disimpan tetap ada di riwayat, sementara form utama kembali kosong.
+            Sesi yang sudah disimpan tetap ada di riwayat, sementara form utama
+            kembali kosong.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -578,12 +646,18 @@ export function AdminPanel({ election }: AdminPanelProps) {
                 className="grid gap-2 rounded-md border bg-background p-3 md:grid-cols-[1fr_auto]"
               >
                 <div>
-                  <p className="font-semibold">{session.title || "Sesi tanpa judul"}</p>
+                  <p className="font-semibold">
+                    {session.title || "Sesi tanpa judul"}
+                  </p>
                   <p className="text-sm text-muted-foreground">
-                    {session.region || "Region kosong"} · {session.candidates.length} kandidat · {session.ballotsCast} suara
+                    {session.region || "Region kosong"} ·{" "}
+                    {session.candidates.length} kandidat · {session.ballotsCast}{" "}
+                    suara
                   </p>
                 </div>
-                <Badge variant={session.status === "closed" ? "verified" : "outline"}>
+                <Badge
+                  variant={session.status === "closed" ? "verified" : "outline"}
+                >
                   {session.status.toUpperCase()}
                 </Badge>
               </div>
@@ -592,7 +666,7 @@ export function AdminPanel({ election }: AdminPanelProps) {
         </CardContent>
       </Card>
     </main>
-  )
+  );
 }
 
 function ProofTile({ label, value }: { label: string; value: string }) {
@@ -603,5 +677,5 @@ function ProofTile({ label, value }: { label: string; value: string }) {
       </p>
       <p className="mt-2 break-words font-mono text-lg font-black">{value}</p>
     </div>
-  )
+  );
 }
