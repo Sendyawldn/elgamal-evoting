@@ -26,7 +26,9 @@ SEED_ELECTION = {
     "candidates": [],
 }
 
-DATA_DIR = Path(".data")
+import tempfile
+
+DATA_DIR = Path("/tmp/.data") if os.getenv("VERCEL") else Path(".data")
 ELECTION_STATE_FILE = DATA_DIR / "election-state.json"
 LEDGER_FILE = DATA_DIR / "vote-ledger.json"
 
