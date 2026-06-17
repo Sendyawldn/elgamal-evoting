@@ -42,6 +42,7 @@ import {
   DEMO_ELGAMAL_PARAMETERS,
   deserializePublicKey,
   type ElGamalPublicKey,
+  type SerializedElGamalPublicKey,
 } from "@/lib/elgamal";
 import {
   createReceipt,
@@ -91,7 +92,7 @@ export function CryptoVoteApp({ election }: CryptoVoteAppProps) {
       try {
         const [body, publicKeyBody] = await Promise.all([
           apiGet<{ election: Election }>("/api/admin/election"),
-          apiGet<{ publicKey: Record<string, string> }>(
+          apiGet<{ publicKey: SerializedElGamalPublicKey }>(
             "/api/elections/public-key",
           ),
         ]);
