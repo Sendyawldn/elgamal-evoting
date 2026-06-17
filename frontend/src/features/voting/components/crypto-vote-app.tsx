@@ -211,7 +211,12 @@ export function CryptoVoteApp({ election }: CryptoVoteAppProps) {
           encryptedChoices: nextReceipt.encryptedChoices,
         },
       ]);
-      setLiveElection(body.election);
+      setLiveElection((prev) => ({
+        ...prev,
+        ...body.election,
+        candidates: body.election.candidates ?? prev.candidates ?? [],
+        authorizedVoters: body.election.authorizedVoters ?? prev.authorizedVoters ?? [],
+      }));
       setServerLedgerSize(body.ledgerSize ?? voteLedger.length + 1);
       setVerifiedVoter(null);
       setReceiptActionMessage("Token siap disalin atau diunduh.");

@@ -117,7 +117,7 @@ def cast_vote(election_id: str, body: VoteRequest):
     saved = save_election_state(updated_election)
 
     return {
-        "election": {"id": saved["election"]["id"], "ballotsCast": saved["election"]["ballotsCast"]},
+        "election": saved["election"],
         "persistence": saved["persistence"],
         "ledgerSize": count_ledger_entries(election["id"]),
     }
