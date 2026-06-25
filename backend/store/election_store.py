@@ -23,7 +23,16 @@ SEED_ELECTION = {
     "ballotsCast": 0,
     "authorizedVoters": [],
     "admins": [{"id": "ADM-001", "email": "admin@kampus.test", "role": "admin"}],
-    "candidates": [],
+    "candidates": [
+        {
+            "id": "abstain",
+            "name": "Kotak Kosong",
+            "party": "Abstain",
+            "color": "#9ca3af",
+            "platform": "Pemilih memilih untuk tidak memberikan suara kepada kandidat mana pun.",
+            "votes": 0,
+        }
+    ],
 }
 
 import tempfile
