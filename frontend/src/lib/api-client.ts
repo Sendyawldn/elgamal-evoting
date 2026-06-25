@@ -51,6 +51,22 @@ export async function apiPut<T>(
   return res.json();
 }
 
+export async function apiDelete<T>(
+  path: string,
+  headers?: Record<string, string>,
+): Promise<T> {
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method: "DELETE",
+    headers: { ...headers },
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new ApiError(err.title ?? "Request failed", res.status, err.code);
+  }
+  return res.json();
+}
+
 export class ApiError extends Error {
   constructor(
     message: string,

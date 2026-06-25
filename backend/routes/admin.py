@@ -6,6 +6,7 @@ from store.election_store import (
     get_election_state,
     save_election_state,
     archive_election_state,
+    delete_history_state,
     list_ledger_entries,
 )
 from elgamal_utils import (
@@ -59,6 +60,15 @@ def archive_election(
     _require_admin(x_cryptovote_admin)
     election = _normalize_election(body)
     return archive_election_state(election)
+
+
+@router.delete("/election/history/{history_id}")
+def delete_history(
+    history_id: str,
+    x_cryptovote_admin: Optional[str] = Header(default=None),
+):
+    _require_admin(x_cryptovote_admin)
+    return delete_history_state(history_id)
 
 
 @router.get("/tally")

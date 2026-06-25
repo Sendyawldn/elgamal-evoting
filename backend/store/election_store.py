@@ -162,6 +162,24 @@ def archive_election_state(election: dict) -> dict:
     return {"election": dict(SEED_ELECTION), "history": history, "persistence": "mongodb"}
 
 
+def delete_history_state(history_id: str) -> dict:
+    db = _get_mongo_db()
+
+    if db is None:
+        local = _read_local_election_state()
+        new_history = [h for h in local["history"] if h["id"] != history_id]
+        _write_local_election_state({
+            "election": local["election"],
+            "history": new_history,
+        })
+        return {"history": new_history, "persistence": "local-file"}
+
+    history_col = db["election_history"]
+    history_col.delete_one({"_id": history_id})
+    history = list(history_col.find({}, {"_id": 0}).sort("updatedAt", -1))
+    return {"history": history, "persistence": "mongodb"}
+
+
 def list_ledger_entries(election_id: str) -> list[dict]:
     db = _get_mongo_db()
     if db is None:

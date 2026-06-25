@@ -11,6 +11,7 @@ import {
   Square,
   Trash2,
   UserCheck,
+  BarChart2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,18 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import type { Candidate, Election, ElectionStatus } from "../types";
-import { apiGet, apiPost, apiPut, ADMIN_HEADERS } from "@/lib/api-client";
+import { apiGet, apiPost, apiPut, apiDelete, ADMIN_HEADERS } from "@/lib/api-client";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  LabelList,
+  Tooltip,
+  XAxis,
+  YAxis,
+  ResponsiveContainer,
+} from "recharts";
 type AdminPanelProps = {
   election: Election;
 };
@@ -55,6 +67,7 @@ export function AdminPanel({ election }: AdminPanelProps) {
   );
   const [aggregationLogs, setAggregationLogs] = useState<string[]>([]);
   const [isDecrypting, setIsDecrypting] = useState(false);
+  const [viewedHistoryId, setViewedHistoryId] = useState<string | null>(null);
 
 
   const hasConfiguredElection = Boolean(
@@ -249,6 +262,19 @@ export function AdminPanel({ election }: AdminPanelProps) {
       setAdminMessage(`State admin disimpan ke ${body.persistence}.`);
     } catch (err: any) {
       setAdminMessage(err.message ?? "Gagal menyimpan state admin.");
+    }
+  }
+
+  async function deleteHistory(historyId: string) {
+    try {
+      const body = await apiDelete<{ history?: Election[] }>(
+        `/api/admin/election/history/${historyId}`,
+        ADMIN_HEADERS,
+      );
+      setHistory(body.history ?? []);
+      setAdminMessage("Sesi riwayat berhasil dihapus.");
+    } catch (err: any) {
+      setAdminMessage(err.message ?? "Gagal menghapus riwayat.");
     }
   }
 
@@ -677,23 +703,70 @@ export function AdminPanel({ election }: AdminPanelProps) {
             history.map((session) => (
               <div
                 key={session.id}
-                className="grid gap-2 rounded-md border bg-background p-3 md:grid-cols-[1fr_auto]"
+                className="grid gap-2 rounded-md border bg-background p-3"
               >
-                <div>
-                  <p className="font-semibold">
-                    {session.title || "Sesi tanpa judul"}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {session.region || "Organisasi/Instansi kosong"} ·{" "}
-                    {session.candidates.length} kandidat · {session.ballotsCast}{" "}
-                    suara
-                  </p>
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div>
+                    <p className="font-semibold flex items-center gap-2">
+                      {session.title || "Sesi tanpa judul"}
+                      <Badge
+                        variant={session.status === "closed" ? "verified" : "outline"}
+                      >
+                        {session.status.toUpperCase()}
+                      </Badge>
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {session.region || "Organisasi/Instansi kosong"} ·{" "}
+                      {session.candidates.length} kandidat · {session.ballotsCast}{" "}
+                      suara
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setViewedHistoryId(viewedHistoryId === session.id ? null : session.id)}
+                    >
+                      <BarChart2 className="size-4 mr-2" />
+                      Grafik
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      onClick={() => deleteHistory(session.id)}
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  </div>
                 </div>
-                <Badge
-                  variant={session.status === "closed" ? "verified" : "outline"}
-                >
-                  {session.status.toUpperCase()}
-                </Badge>
+                {viewedHistoryId === session.id && (
+                  <div className="mt-4 pt-4 border-t h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={session.candidates.map(c => ({
+                          name: c.name,
+                          votes: c.votes,
+                          color: c.color
+                        }))}
+                        margin={{ top: 20, right: 0, left: -20, bottom: 0 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.5} />
+                        <XAxis dataKey="name" tickLine={false} axisLine={false} fontSize={12} />
+                        <YAxis tickLine={false} axisLine={false} fontSize={12} allowDecimals={false} />
+                        <Tooltip
+                          cursor={{ fill: "transparent" }}
+                          contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
+                        />
+                        <Bar dataKey="votes" radius={[4, 4, 0, 0]} maxBarSize={60}>
+                          {session.candidates.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                          <LabelList dataKey="votes" position="top" className="fill-foreground font-semibold" />
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
               </div>
             ))
           )}
