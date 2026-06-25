@@ -676,7 +676,11 @@ export function AdminPanel({ election }: AdminPanelProps) {
               <ProofTile
                 key={candidate.id}
                 label={candidate.name}
-                value={`${finalTally?.[candidate.id] ?? candidate.votes} suara`}
+                value={
+                  finalTally !== null
+                    ? `${finalTally[candidate.id] ?? 0} suara`
+                    : "🔒 Terenkripsi"
+                }
               />
             ))}
           </div>
