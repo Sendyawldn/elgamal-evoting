@@ -2,11 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  LabelList,
   Line,
   LineChart,
   Tooltip,
@@ -113,16 +108,6 @@ export function CryptoVoteApp({ election }: CryptoVoteAppProps) {
   const turnout = getTurnoutPercentage(
     liveElection.ballotsCast,
     liveElection.totalVoters,
-  );
-  const chartData = useMemo(
-    () =>
-      (liveElection.candidates || []).map((candidate) => ({
-        name: candidate.name.split(" ")[0],
-        votes: candidate.votes,
-        percent: getCandidatePercent(candidate.votes, liveElection.ballotsCast),
-        color: candidate.color,
-      })),
-    [liveElection],
   );
   const trendData = useMemo(
     () =>
@@ -564,63 +549,16 @@ export function CryptoVoteApp({ election }: CryptoVoteAppProps) {
                     className="size-5 text-verified"
                     aria-hidden="true"
                   />
-                  Hasil Live
+                  Status Partisipasi Pemilih
                 </CardTitle>
                 <CardDescription>
-                  Total suara publik diperbarui dengan simulasi refresh ringan.
+                  Tingkat partisipasi diperbarui dengan simulasi refresh ringan.
                 </CardDescription>
               </div>
               <Badge variant="verified">{liveElection.ballotsCast} suara</Badge>
             </div>
           </CardHeader>
           <CardContent className="space-y-5">
-            <div className="h-64 w-full" aria-label="Grafik suara kandidat">
-              {hasMounted ? (
-                <BarChart
-                  data={chartData}
-                  layout="vertical"
-                  margin={{ left: 8, right: 24 }}
-                  responsive
-                  style={{ width: "100%", height: "100%" }}
-                >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    horizontal={false}
-                    stroke="var(--border)"
-                  />
-                  <XAxis type="number" hide />
-                  <YAxis
-                    type="category"
-                    dataKey="name"
-                    width={52}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <Tooltip
-                    cursor={{
-                      fill: "color-mix(in oklch, var(--secondary) 65%, transparent)",
-                    }}
-                    formatter={(value, name) => [
-                      name === "votes" ? `${value} suara` : `${value}%`,
-                      name === "votes" ? "Total" : "Persen",
-                    ]}
-                  />
-                  <Bar dataKey="votes" radius={[0, 6, 6, 0]}>
-                    <LabelList
-                      dataKey="percent"
-                      position="right"
-                      formatter={(value) => `${value ?? 0}%`}
-                    />
-                    {chartData.map((entry) => (
-                      <Cell key={entry.name} fill={entry.color} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              ) : (
-                <div className="h-full rounded-md bg-muted" />
-              )}
-            </div>
-
             <div>
               <div className="mb-2 flex items-center justify-between text-sm">
                 <span className="font-medium">Turnout</span>
