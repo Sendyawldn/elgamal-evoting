@@ -386,7 +386,7 @@ export function AdminPanel({ election }: AdminPanelProps) {
         </CardHeader>
         <CardContent className="grid gap-3 md:grid-cols-3">
           <label className="grid gap-2 text-sm font-medium">
-            Judul
+            Judul <span className="text-destructive">*</span>
             <input
               className="h-11 rounded-md border bg-background px-3 outline-none focus-visible:ring-2 focus-visible:ring-ring"
               value={managedElection.title}
@@ -400,7 +400,7 @@ export function AdminPanel({ election }: AdminPanelProps) {
             />
           </label>
           <label className="grid gap-2 text-sm font-medium">
-            Region
+            Organisasi / Instansi <span className="text-destructive">*</span>
             <input
               className="h-11 rounded-md border bg-background px-3 outline-none focus-visible:ring-2 focus-visible:ring-ring"
               value={managedElection.region}
@@ -414,7 +414,7 @@ export function AdminPanel({ election }: AdminPanelProps) {
             />
           </label>
           <label className="grid gap-2 text-sm font-medium md:col-span-3">
-            Deskripsi
+            Deskripsi <span className="text-destructive">*</span>
             <textarea
               className="min-h-20 rounded-md border bg-background p-3 outline-none focus-visible:ring-2 focus-visible:ring-ring"
               value={managedElection.description}
@@ -445,7 +445,7 @@ export function AdminPanel({ election }: AdminPanelProps) {
             <div className="grid gap-3">
               <input
                 className="h-11 rounded-md border bg-background px-3 outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                placeholder="Nama kandidat"
+                placeholder="Nama kandidat *"
                 value={candidateDraft.name}
                 onChange={(event) =>
                   setCandidateDraft((current) => ({
@@ -456,7 +456,7 @@ export function AdminPanel({ election }: AdminPanelProps) {
               />
               <input
                 className="h-11 rounded-md border bg-background px-3 outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                placeholder="Kelompok atau partai"
+                placeholder="Kelompok atau partai *"
                 value={candidateDraft.party}
                 onChange={(event) =>
                   setCandidateDraft((current) => ({
@@ -526,7 +526,7 @@ export function AdminPanel({ election }: AdminPanelProps) {
             <div className="flex gap-2">
               <input
                 className="h-11 min-w-0 flex-1 rounded-md border bg-background px-3 outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                placeholder="Email / ID / NIM"
+                placeholder="Email / ID / NIM *"
                 value={voterIdentifierDraft}
                 onChange={(event) =>
                   setVoterIdentifierDraft(event.target.value)
@@ -650,7 +650,7 @@ export function AdminPanel({ election }: AdminPanelProps) {
                     {session.title || "Sesi tanpa judul"}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {session.region || "Region kosong"} ·{" "}
+                    {session.region || "Organisasi/Instansi kosong"} ·{" "}
                     {session.candidates.length} kandidat · {session.ballotsCast}{" "}
                     suara
                   </p>
