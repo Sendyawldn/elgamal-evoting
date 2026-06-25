@@ -215,7 +215,8 @@ export function CryptoVoteApp({ election }: CryptoVoteAppProps) {
         ...prev,
         ...body.election,
         candidates: body.election.candidates ?? prev.candidates ?? [],
-        authorizedVoters: body.election.authorizedVoters ?? prev.authorizedVoters ?? [],
+        authorizedVoters:
+          body.election.authorizedVoters ?? prev.authorizedVoters ?? [],
       }));
       setServerLedgerSize(body.ledgerSize ?? voteLedger.length + 1);
       setVerifiedVoter(null);
@@ -436,9 +437,6 @@ export function CryptoVoteApp({ election }: CryptoVoteAppProps) {
                     >
                       {selected ? <Check className="size-4" /> : null}
                     </span>
-                  </span>
-                  <span className="mt-3 block text-sm leading-6 text-muted-foreground">
-                    {candidate.platform}
                   </span>
                 </button>
               );
