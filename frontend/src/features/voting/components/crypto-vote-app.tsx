@@ -119,9 +119,9 @@ export function CryptoVoteApp({ election }: CryptoVoteAppProps) {
   );
 
   function checkVoter() {
-    const normalizedInput = voterIdentifier.trim().toLowerCase();
-    const foundVoter = (liveElection.authorizedVoters || []).find((voter) =>
-      getVoterLookupValues(voter).some((value) => value === normalizedInput),
+    const normalizedInput = voterIdentifier.trim().toUpperCase();
+    const foundVoter = (liveElection.authorizedVoters || []).find(
+      (voter) => voter.identifier === normalizedInput,
     );
 
     setReceipt(null);
@@ -333,9 +333,9 @@ export function CryptoVoteApp({ election }: CryptoVoteAppProps) {
 
       <section className="custody-rail grid gap-4 rounded-lg border p-4 shadow-sm sm:grid-cols-[1fr_auto]">
         <label className="grid gap-2 text-sm font-medium">
-          Email / ID / NIM
+          Token Rahasia
           <input
-            className="h-11 rounded-md border bg-card px-3 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="h-11 rounded-md border bg-card px-3 outline-none focus-visible:ring-2 focus-visible:ring-ring uppercase"
             value={voterIdentifier}
             onChange={(event) => {
               setVoterIdentifier(event.target.value);
@@ -345,7 +345,7 @@ export function CryptoVoteApp({ election }: CryptoVoteAppProps) {
               setSelectedCandidateId("");
               setVoterCheckMessage("Tekan Cek DPT untuk membuka surat suara.");
             }}
-            placeholder="Masukkan Email, ID, atau NIM"
+            placeholder="Masukkan Token Rahasia (misal: 8XF2A9)"
           />
           <span className="text-xs text-muted-foreground">
             {voterCheckMessage}
@@ -742,10 +742,4 @@ function ProofTile({ label, value }: { label: string; value: string }) {
 
 function getPrimaryVoterIdentifier(voter: Voter) {
   return voter.identifier || voter.id || voter.email;
-}
-
-function getVoterLookupValues(voter: Voter) {
-  return [voter.identifier, voter.id, voter.email]
-    .filter((value): value is string => Boolean(value))
-    .map((value) => value.trim().toLowerCase());
 }

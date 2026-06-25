@@ -199,22 +199,22 @@ export function AdminPanel({ election }: AdminPanelProps) {
     }
 
     if (!voterIdentifierDraft.trim()) {
-      setVoterMessage("Masukkan Email, ID, atau NIM pemilih.");
+      setVoterMessage("Masukkan nama pemilih.");
       return;
     }
 
-    const identifier = voterIdentifierDraft.trim();
-    const normalizedIdentifier = identifier.toLowerCase();
+    const name = voterIdentifierDraft.trim();
+    const normalizedName = name.toLowerCase();
     const alreadyExists = managedElection.authorizedVoters.some((voter) =>
-      [voter.identifier, voter.id, voter.email]
-        .filter(Boolean)
-        .some((value) => value.toLowerCase() === normalizedIdentifier),
+      voter.name?.toLowerCase() === normalizedName
     );
 
     if (alreadyExists) {
-      setVoterMessage("Pemilih ini sudah ada di DPT.");
+      setVoterMessage("Pemilih dengan nama ini sudah ada.");
       return;
     }
+
+    const token = Math.random().toString(36).substring(2, 8).toUpperCase();
 
     setManagedElection((current) => ({
       ...current,
@@ -222,11 +222,10 @@ export function AdminPanel({ election }: AdminPanelProps) {
       authorizedVoters: [
         ...current.authorizedVoters,
         {
-          id: identifier.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
-          email: identifier.includes("@")
-            ? identifier.toLowerCase()
-            : `${identifier.toLowerCase().replace(/[^a-z0-9]+/g, "-")}@local.voter`,
-          identifier,
+          id: token.toLowerCase(),
+          email: `${token.toLowerCase()}@local.voter`,
+          identifier: token,
+          name: name,
           hasVoted: false,
         },
       ],
@@ -569,7 +568,7 @@ export function AdminPanel({ election }: AdminPanelProps) {
             <div className="flex gap-2">
               <input
                 className="h-11 min-w-0 flex-1 rounded-md border bg-background px-3 outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                placeholder="Email / ID / NIM *"
+                placeholder="Nama Pemilih *"
                 value={voterIdentifierDraft}
                 onChange={(event) =>
                   setVoterIdentifierDraft(event.target.value)
@@ -598,10 +597,10 @@ export function AdminPanel({ election }: AdminPanelProps) {
                 >
                   <div>
                     <p className="font-semibold">
-                      {voter.identifier || voter.id}
+                      {voter.name || voter.identifier || voter.id}
                     </p>
-                    <p className="text-sm text-muted-foreground">
-                      {voter.email}
+                    <p className="text-sm font-mono text-muted-foreground">
+                      Token: {voter.identifier}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
