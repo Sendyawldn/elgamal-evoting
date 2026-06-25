@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
   KeyRound,
   LockKeyhole,
@@ -45,6 +45,8 @@ export function AdminPanel({ election }: AdminPanelProps) {
     platform: "",
   });
   const [voterIdentifierDraft, setVoterIdentifierDraft] = useState("");
+  const [voterMessage, setVoterMessage] = useState("");
+  const [candidateMessage, setCandidateMessage] = useState("");
   const [adminMessage, setAdminMessage] = useState(
     "Admin memiliki full access atas konfigurasi demo.",
   );
@@ -54,13 +56,7 @@ export function AdminPanel({ election }: AdminPanelProps) {
   const [aggregationLogs, setAggregationLogs] = useState<string[]>([]);
   const [isDecrypting, setIsDecrypting] = useState(false);
 
-  const votedNames = useMemo(
-    () =>
-      managedElection.authorizedVoters
-        .filter((voter) => voter.hasVoted)
-        .map((voter) => voter.identifier || voter.email),
-    [managedElection.authorizedVoters],
-  );
+
   const hasConfiguredElection = Boolean(
     managedElection.title.trim() &&
     managedElection.description.trim() &&
@@ -126,14 +122,24 @@ export function AdminPanel({ election }: AdminPanelProps) {
 
   function addCandidate() {
     if (managedElection.status !== "draft") {
-      setAdminMessage(
+      setCandidateMessage(
         "Kandidat tidak bisa ditambahkan setelah pemilihan dimulai.",
       );
       return;
     }
 
     if (!candidateDraft.name.trim() || !candidateDraft.party.trim()) {
-      setAdminMessage("Nama dan kelompok kandidat wajib diisi.");
+      setCandidateMessage("Nama dan kelompok kandidat wajib diisi.");
+      return;
+    }
+
+    const normalizedName = candidateDraft.name.trim().toLowerCase();
+    const nameExists = managedElection.candidates.some(
+      (c) => c.name.toLowerCase() === normalizedName
+    );
+
+    if (nameExists) {
+      setCandidateMessage("Kandidat dengan nama ini sudah ada.");
       return;
     }
 
@@ -155,7 +161,7 @@ export function AdminPanel({ election }: AdminPanelProps) {
       candidates: [...current.candidates, nextCandidate],
     }));
     setCandidateDraft({ name: "", party: "", platform: "" });
-    setAdminMessage("Kandidat ditambahkan.");
+    setCandidateMessage("");
   }
 
   function removeCandidate(candidateId: string) {
@@ -175,12 +181,12 @@ export function AdminPanel({ election }: AdminPanelProps) {
 
   function addVoterIdentifier() {
     if (managedElection.status !== "draft") {
-      setAdminMessage("DPT tidak bisa ditambahkan setelah pemilihan dimulai.");
+      setVoterMessage("DPT tidak bisa ditambahkan setelah pemilihan dimulai.");
       return;
     }
 
     if (!voterIdentifierDraft.trim()) {
-      setAdminMessage("Masukkan Email, ID, atau NIM pemilih.");
+      setVoterMessage("Masukkan Email, ID, atau NIM pemilih.");
       return;
     }
 
@@ -193,7 +199,7 @@ export function AdminPanel({ election }: AdminPanelProps) {
     );
 
     if (alreadyExists) {
-      setAdminMessage("Pemilih ini sudah ada di DPT.");
+      setVoterMessage("Pemilih ini sudah ada di DPT.");
       return;
     }
 
@@ -213,7 +219,23 @@ export function AdminPanel({ election }: AdminPanelProps) {
       ],
     }));
     setVoterIdentifierDraft("");
-    setAdminMessage("Pemilih ditambahkan ke DPT.");
+    setVoterMessage("");
+  }
+
+  function removeVoterIdentifier(voterId: string) {
+    if (managedElection.status !== "draft") {
+      setVoterMessage("DPT tidak bisa dihapus setelah pemilihan dimulai.");
+      return;
+    }
+
+    setManagedElection((current) => ({
+      ...current,
+      totalVoters: current.totalVoters - 1,
+      authorizedVoters: current.authorizedVoters.filter(
+        (voter) => voter.id !== voterId,
+      ),
+    }));
+    setVoterMessage("");
   }
 
   async function persistElectionState(electionToSave: Election) {
@@ -465,17 +487,7 @@ export function AdminPanel({ election }: AdminPanelProps) {
                   }))
                 }
               />
-              <textarea
-                className="min-h-20 rounded-md border bg-background p-3 outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                placeholder="Platform kandidat"
-                value={candidateDraft.platform}
-                onChange={(event) =>
-                  setCandidateDraft((current) => ({
-                    ...current,
-                    platform: event.target.value,
-                  }))
-                }
-              />
+
               <Button
                 type="button"
                 variant="secondary"
@@ -486,6 +498,11 @@ export function AdminPanel({ election }: AdminPanelProps) {
                 Tambah Kandidat
               </Button>
             </div>
+            {candidateMessage && (
+              <p className="text-sm font-medium text-destructive">
+                {candidateMessage}
+              </p>
+            )}
 
             <div className="space-y-2">
               {managedElection.candidates.map((candidate) => (
@@ -542,6 +559,11 @@ export function AdminPanel({ election }: AdminPanelProps) {
                 Tambah
               </Button>
             </div>
+            {voterMessage && (
+              <p className="text-sm font-medium text-destructive">
+                {voterMessage}
+              </p>
+            )}
             <div className="max-h-80 space-y-2 overflow-auto pr-1">
               {managedElection.authorizedVoters.map((voter) => (
                 <div
@@ -556,14 +578,26 @@ export function AdminPanel({ election }: AdminPanelProps) {
                       {voter.email}
                     </p>
                   </div>
-                  <Badge variant={voter.hasVoted ? "verified" : "outline"}>
-                    {voter.hasVoted ? "Sudah memilih" : "Belum"}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={voter.hasVoted ? "verified" : "outline"}>
+                      {voter.hasVoted ? "Sudah memilih" : "Belum"}
+                    </Badge>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeVoterIdentifier(voter.id)}
+                      disabled={managedElection.status !== "draft"}
+                      aria-label={`Hapus pemilih ${voter.identifier || voter.id}`}
+                    >
+                      <Trash2 className="size-4" aria-hidden="true" />
+                    </Button>
+                  </div>
                 </div>
               ))}
-              {votedNames.length === 0 ? (
+              {managedElection.authorizedVoters.length === 0 ? (
                 <p className="rounded-md border bg-background p-3 text-sm text-muted-foreground">
-                  Belum ada pemilih yang tercatat memilih di panel admin ini.
+                  Belum ada pemilih yang terdaftar di DPT.
                 </p>
               ) : null}
             </div>
