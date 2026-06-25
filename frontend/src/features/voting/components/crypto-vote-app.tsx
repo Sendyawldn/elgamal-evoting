@@ -146,7 +146,7 @@ export function CryptoVoteApp({ election }: CryptoVoteAppProps) {
 
     setVerifiedVoter(foundVoter);
     setVoterCheckMessage(
-      "DPT valid. Surat suara sudah dibuka untuk pemilih ini.",
+      `DPT valid. Selamat datang, ${foundVoter.name || "Pemilih"}.`,
     );
   }
 
