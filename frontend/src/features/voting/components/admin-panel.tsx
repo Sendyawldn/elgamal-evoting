@@ -386,7 +386,7 @@ export function AdminPanel({ election }: AdminPanelProps) {
         </CardHeader>
         <CardContent className="grid gap-3 md:grid-cols-3">
           <label className="grid gap-2 text-sm font-medium">
-            Judul <span className="text-destructive">*</span>
+            <span>Judul <span className="text-destructive">*</span></span>
             <input
               className="h-11 rounded-md border bg-background px-3 outline-none focus-visible:ring-2 focus-visible:ring-ring"
               value={managedElection.title}
@@ -400,7 +400,7 @@ export function AdminPanel({ election }: AdminPanelProps) {
             />
           </label>
           <label className="grid gap-2 text-sm font-medium">
-            Organisasi / Instansi <span className="text-destructive">*</span>
+            <span>Organisasi / Instansi <span className="text-destructive">*</span></span>
             <input
               className="h-11 rounded-md border bg-background px-3 outline-none focus-visible:ring-2 focus-visible:ring-ring"
               value={managedElection.region}
@@ -414,7 +414,7 @@ export function AdminPanel({ election }: AdminPanelProps) {
             />
           </label>
           <label className="grid gap-2 text-sm font-medium md:col-span-3">
-            Deskripsi <span className="text-destructive">*</span>
+            <span>Deskripsi <span className="text-destructive">*</span></span>
             <textarea
               className="min-h-20 rounded-md border bg-background p-3 outline-none focus-visible:ring-2 focus-visible:ring-ring"
               value={managedElection.description}
