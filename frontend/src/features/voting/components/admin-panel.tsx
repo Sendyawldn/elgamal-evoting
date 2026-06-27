@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   KeyRound,
   LockKeyhole,
@@ -97,6 +97,25 @@ export function AdminPanel({ election }: AdminPanelProps) {
       // Handle error
     }
   }
+
+  useEffect(() => {
+    if (!isLoggedIn || managedElection.status !== "open") return;
+
+    const intervalId = setInterval(async () => {
+      try {
+        const body = await apiGet<{ election: Election; history: Election[] }>(
+          "/api/admin/election",
+          { headers: ADMIN_HEADERS },
+        );
+        setManagedElection(body.election);
+        setHistory(body.history ?? []);
+      } catch (err) {
+        // Abaikan error jaringan sesaat di latar belakang
+      }
+    }, 3000);
+
+    return () => clearInterval(intervalId);
+  }, [isLoggedIn, managedElection.status]);
 
   function login() {
     if (
