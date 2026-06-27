@@ -443,7 +443,7 @@ export function AdminPanel({ election }: AdminPanelProps) {
             <Button
               type="button"
               onClick={syncAdminState}
-              disabled={managedElection.status !== "closed"}
+              disabled={managedElection.status === "open"}
             >
               <UserCheck className="size-4" aria-hidden="true" />
               Simpan State
