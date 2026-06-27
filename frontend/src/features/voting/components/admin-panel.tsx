@@ -334,7 +334,7 @@ export function AdminPanel({ election }: AdminPanelProps) {
 
     setIsDecrypting(true);
     setAggregationLogs([
-      "Menghubungi ledger terenkripsi...",
+      "Menghubungi kotak suara terenkripsi...",
       "Menyiapkan operasi homomorphic...",
     ]);
 
@@ -351,7 +351,7 @@ export function AdminPanel({ election }: AdminPanelProps) {
       );
       setIsDecrypting(false);
     } catch (err: any) {
-      setAdminMessage(err.message ?? "Gagal menjalankan dekripsi tally.");
+      setAdminMessage(err.message ?? "Gagal menjalankan dekripsi rekapitulasi.");
       setAggregationLogs([]);
       setIsDecrypting(false);
     }
@@ -698,7 +698,7 @@ export function AdminPanel({ election }: AdminPanelProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <KeyRound className="size-5 text-crypto" aria-hidden="true" />
-            Dekripsi Hasil Akhir
+            Dekripsi Rekapitulasi Akhir
           </CardTitle>
           <CardDescription>
             Private key dan fungsi dekripsi hanya berada di area admin setelah
@@ -712,7 +712,7 @@ export function AdminPanel({ election }: AdminPanelProps) {
             disabled={managedElection.status !== "closed" || isDecrypting}
           >
             <KeyRound className="size-4" aria-hidden="true" />
-            {isDecrypting ? "Memproses Tally..." : "Dekripsi Tally Agregat"}
+            {isDecrypting ? "Memproses Rekapitulasi..." : "Dekripsi Rekapitulasi"}
           </Button>
           <div
             className="rounded-md border bg-background p-3"

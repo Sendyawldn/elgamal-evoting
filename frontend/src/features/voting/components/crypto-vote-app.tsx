@@ -289,7 +289,7 @@ export function CryptoVoteApp({ election }: CryptoVoteAppProps) {
               className="mb-4 gap-2 border-primary/20 bg-primary/10 text-foreground"
             >
               <ShieldCheck className="size-3.5" aria-hidden="true" />
-              El Gamal homomorphic tally
+              Rekapitulasi Homomorfik El Gamal
             </Badge>
             <h1 className="max-w-3xl text-4xl font-black tracking-normal text-foreground sm:text-6xl">
               Evoting
@@ -321,11 +321,11 @@ export function CryptoVoteApp({ election }: CryptoVoteAppProps) {
             value={receipt ? "Receipt tersegel" : "Siap El Gamal"}
           />
           <CustodyStep
-            label="3. Ledger"
+            label="3. Kotak Suara"
             value={`${serverLedgerSize || voteLedger.length} token`}
           />
           <CustodyStep
-            label="4. Tally"
+            label="4. Rekapitulasi"
             value={liveElection.status === "closed" ? "Final" : "Terkunci"}
           />
         </div>
@@ -490,7 +490,7 @@ export function CryptoVoteApp({ election }: CryptoVoteAppProps) {
                 ) : (
                   <p className="text-muted-foreground">
                     Pilihan {selectedCandidate?.name ?? "belum dipilih"} akan
-                    disegel sebagai ballot El Gamal.
+                    disegel sebagai surat suara El Gamal.
                   </p>
                 )}
               </div>
@@ -579,7 +579,7 @@ export function CryptoVoteApp({ election }: CryptoVoteAppProps) {
                   <XAxis dataKey="tick" hide />
                   <YAxis hide domain={["dataMin - 20", "dataMax + 20"]} />
                   <Tooltip
-                    formatter={(value) => [`${value} suara`, "Ballot"]}
+                    formatter={(value) => [`${value} suara`, "Surat Suara Masuk"]}
                   />
                   <Line
                     type="monotone"
@@ -610,7 +610,7 @@ export function CryptoVoteApp({ election }: CryptoVoteAppProps) {
             </CardTitle>
             <CardDescription>
               Tempel token receipt untuk membuktikan ciphertext sudah masuk
-              ledger tanpa membuka pilihan.
+              kotak suara tanpa membuka pilihan.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -667,13 +667,13 @@ export function CryptoVoteApp({ election }: CryptoVoteAppProps) {
               Bukti Homomorfik
             </CardTitle>
             <CardDescription>
-              Setiap suara menyimpan vektor ciphertext. Tally menjumlah dengan
+              Setiap suara menyimpan vektor sandi. Rekapitulasi menjumlahkan dengan
               perkalian ciphertext per kandidat.
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3 sm:grid-cols-3">
             <ProofTile
-              label="Ledger tersimpan"
+              label="Kotak Suara Tersimpan"
               value={`${serverLedgerSize || voteLedger.length}`}
             />
             <ProofTile
@@ -684,7 +684,7 @@ export function CryptoVoteApp({ election }: CryptoVoteAppProps) {
               label="Generator g"
               value={DEMO_ELGAMAL_PARAMETERS.g.toString()}
             />
-            <ProofTile label="Operasi tally" value="C1 x C2 mod p" />
+            <ProofTile label="Operasi rekapitulasi" value="C1 x C2 mod p" />
             <ProofTile label="Private key" value="Key ceremony produksi" />
             <ProofTile label="Reveal pilihan" value="Tidak" />
           </CardContent>
