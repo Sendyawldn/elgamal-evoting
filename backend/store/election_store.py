@@ -27,7 +27,7 @@ SEED_ELECTION = {
         {
             "id": "abstain",
             "name": "Kotak Kosong",
-            "party": "Abstain",
+            "party": "Golput",
             "color": "#9ca3af",
             "platform": "Pemilih memilih untuk tidak memberikan suara kepada kandidat mana pun.",
             "votes": 0,

@@ -23,7 +23,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import type { Candidate, Election, ElectionStatus } from "../types";
-import { apiGet, apiPost, apiPut, apiDelete, ADMIN_HEADERS } from "@/lib/api-client";
+import {
+  apiGet,
+  apiPost,
+  apiPut,
+  apiDelete,
+  ADMIN_HEADERS,
+} from "@/lib/api-client";
 import {
   Bar,
   BarChart,
@@ -68,7 +74,6 @@ export function AdminPanel({ election }: AdminPanelProps) {
   const [aggregationLogs, setAggregationLogs] = useState<string[]>([]);
   const [isDecrypting, setIsDecrypting] = useState(false);
   const [viewedHistoryId, setViewedHistoryId] = useState<string | null>(null);
-
 
   const hasConfiguredElection = Boolean(
     managedElection.title.trim() &&
@@ -147,21 +152,26 @@ export function AdminPanel({ election }: AdminPanelProps) {
     }
 
     const normalizedName = candidateDraft.name.trim().toLowerCase();
-    const nameExists = managedElection.candidates.some(
-      (c) => c.name.toLowerCase() === normalizedName
+    const normalizedParty = candidateDraft.party.trim().toLowerCase();
+
+    const candidateExists = managedElection.candidates.some(
+      (c) =>
+        c.name.toLowerCase() === normalizedName &&
+        c.party.toLowerCase() === normalizedParty,
     );
 
-    if (nameExists) {
-      setCandidateMessage("Kandidat dengan nama ini sudah ada.");
+    if (candidateExists) {
+      setCandidateMessage(
+        "Kandidat dengan kombinasi nama dan kelompok ini sudah ada.",
+      );
       return;
     }
 
+    const uniqueId =
+      "KAND-" + Math.random().toString(36).substring(2, 7).toUpperCase();
+
     const nextCandidate: Candidate = {
-      id: candidateDraft.name
-        .trim()
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-|-$/g, ""),
+      id: uniqueId,
       name: candidateDraft.name.trim(),
       party: candidateDraft.party.trim(),
       platform: candidateDraft.platform.trim() || "Platform belum diisi admin.",
@@ -205,8 +215,8 @@ export function AdminPanel({ election }: AdminPanelProps) {
 
     const name = voterIdentifierDraft.trim();
     const normalizedName = name.toLowerCase();
-    const alreadyExists = managedElection.authorizedVoters.some((voter) =>
-      voter.name?.toLowerCase() === normalizedName
+    const alreadyExists = managedElection.authorizedVoters.some(
+      (voter) => voter.name?.toLowerCase() === normalizedName,
     );
 
     if (alreadyExists) {
@@ -433,7 +443,9 @@ export function AdminPanel({ election }: AdminPanelProps) {
         </CardHeader>
         <CardContent className="grid gap-3 md:grid-cols-3">
           <label className="grid gap-2 text-sm font-medium">
-            <span>Judul <span className="text-destructive">*</span></span>
+            <span>
+              Judul <span className="text-destructive">*</span>
+            </span>
             <input
               className="h-11 rounded-md border bg-background px-3 outline-none focus-visible:ring-2 focus-visible:ring-ring"
               value={managedElection.title}
@@ -447,7 +459,9 @@ export function AdminPanel({ election }: AdminPanelProps) {
             />
           </label>
           <label className="grid gap-2 text-sm font-medium">
-            <span>Organisasi / Instansi <span className="text-destructive">*</span></span>
+            <span>
+              Organisasi / Instansi <span className="text-destructive">*</span>
+            </span>
             <input
               className="h-11 rounded-md border bg-background px-3 outline-none focus-visible:ring-2 focus-visible:ring-ring"
               value={managedElection.region}
@@ -461,7 +475,9 @@ export function AdminPanel({ election }: AdminPanelProps) {
             />
           </label>
           <label className="grid gap-2 text-sm font-medium md:col-span-3">
-            <span>Deskripsi <span className="text-destructive">*</span></span>
+            <span>
+              Deskripsi <span className="text-destructive">*</span>
+            </span>
             <textarea
               className="min-h-20 rounded-md border bg-background p-3 outline-none focus-visible:ring-2 focus-visible:ring-ring"
               value={managedElection.description}
@@ -522,6 +538,33 @@ export function AdminPanel({ election }: AdminPanelProps) {
                 <Plus className="size-4" aria-hidden="true" />
                 Tambah Kandidat
               </Button>
+              {!managedElection.candidates.some((c) => c.id === "abstain") && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setManagedElection((current) => ({
+                      ...current,
+                      candidates: [
+                        ...current.candidates,
+                        {
+                          id: "abstain",
+                          name: "Kotak Kosong",
+                          party: "Golput",
+                          color: "#9ca3af",
+                          platform:
+                            "Pemilih memilih untuk tidak memberikan suara kepada kandidat mana pun.",
+                          votes: 0,
+                        },
+                      ],
+                    }));
+                  }}
+                  disabled={managedElection.status !== "draft"}
+                >
+                  <Plus className="size-4" aria-hidden="true" />
+                  Tambahkan Golput
+                </Button>
+              )}
             </div>
             {candidateMessage && (
               <p className="text-sm font-medium text-destructive">
@@ -541,16 +584,18 @@ export function AdminPanel({ election }: AdminPanelProps) {
                       {candidate.party}
                     </p>
                   </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeCandidate(candidate.id)}
-                    disabled={managedElection.status !== "draft"}
-                    aria-label={`Hapus ${candidate.name}`}
-                  >
-                    <Trash2 className="size-4" aria-hidden="true" />
-                  </Button>
+                  {candidate.id !== "abstain" && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeCandidate(candidate.id)}
+                      disabled={managedElection.status !== "draft"}
+                      aria-label={`Hapus ${candidate.name}`}
+                    >
+                      <Trash2 className="size-4" aria-hidden="true" />
+                    </Button>
+                  )}
                 </div>
               ))}
             </div>
@@ -713,22 +758,28 @@ export function AdminPanel({ election }: AdminPanelProps) {
                     <p className="font-semibold flex items-center gap-2">
                       {session.title || "Sesi tanpa judul"}
                       <Badge
-                        variant={session.status === "closed" ? "verified" : "outline"}
+                        variant={
+                          session.status === "closed" ? "verified" : "outline"
+                        }
                       >
                         {session.status.toUpperCase()}
                       </Badge>
                     </p>
                     <p className="text-sm text-muted-foreground mt-1">
                       {session.region || "Organisasi/Instansi kosong"} ·{" "}
-                      {session.candidates.length} kandidat · {session.ballotsCast}{" "}
-                      suara
+                      {session.candidates.length} kandidat ·{" "}
+                      {session.ballotsCast} suara
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setViewedHistoryId(viewedHistoryId === session.id ? null : session.id)}
+                      onClick={() =>
+                        setViewedHistoryId(
+                          viewedHistoryId === session.id ? null : session.id,
+                        )
+                      }
                     >
                       <BarChart2 className="size-4 mr-2" />
                       Grafik
@@ -746,25 +797,51 @@ export function AdminPanel({ election }: AdminPanelProps) {
                   <div className="mt-4 pt-4 border-t h-64">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart
-                        data={session.candidates.map(c => ({
+                        data={session.candidates.map((c) => ({
                           name: c.name,
                           votes: c.votes,
-                          color: c.color
+                          color: c.color,
                         }))}
                         margin={{ top: 20, right: 0, left: -20, bottom: 0 }}
                       >
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.5} />
-                        <XAxis dataKey="name" tickLine={false} axisLine={false} fontSize={12} />
-                        <YAxis tickLine={false} axisLine={false} fontSize={12} allowDecimals={false} />
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          vertical={false}
+                          opacity={0.5}
+                        />
+                        <XAxis
+                          dataKey="name"
+                          tickLine={false}
+                          axisLine={false}
+                          fontSize={12}
+                        />
+                        <YAxis
+                          tickLine={false}
+                          axisLine={false}
+                          fontSize={12}
+                          allowDecimals={false}
+                        />
                         <Tooltip
                           cursor={{ fill: "transparent" }}
-                          contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
+                          contentStyle={{
+                            borderRadius: "8px",
+                            border: "none",
+                            boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                          }}
                         />
-                        <Bar dataKey="votes" radius={[4, 4, 0, 0]} maxBarSize={60}>
+                        <Bar
+                          dataKey="votes"
+                          radius={[4, 4, 0, 0]}
+                          maxBarSize={60}
+                        >
                           {session.candidates.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={entry.color} />
                           ))}
-                          <LabelList dataKey="votes" position="top" className="fill-foreground font-semibold" />
+                          <LabelList
+                            dataKey="votes"
+                            position="top"
+                            className="fill-foreground font-semibold"
+                          />
                         </Bar>
                       </BarChart>
                     </ResponsiveContainer>
