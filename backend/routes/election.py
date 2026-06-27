@@ -105,10 +105,6 @@ def cast_vote(election_id: str, body: VoteRequest):
     updated_election = {
         **election,
         "ballotsCast": election["ballotsCast"] + 1,
-        "candidates": [
-            {**c, "votes": c["votes"] + 1} if c["id"] == body.candidateId else c
-            for c in election["candidates"]
-        ],
         "authorizedVoters": [
             {**v, "hasVoted": True, "votedAt": voted_at} if v["id"] == voter["id"] else v
             for v in election["authorizedVoters"]
