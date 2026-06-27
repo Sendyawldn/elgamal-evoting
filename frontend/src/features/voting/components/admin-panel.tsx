@@ -354,8 +354,19 @@ export function AdminPanel({ election }: AdminPanelProps) {
       }>("/api/admin/tally", { headers: ADMIN_HEADERS });
       setFinalTally(body.tally);
       setAggregationLogs(body.logs ?? []);
+      
+      const updatedElection = {
+        ...managedElection,
+        candidates: managedElection.candidates.map((c) => ({
+          ...c,
+          votes: body.tally[c.id] ?? 0,
+        })),
+      };
+      setManagedElection(updatedElection);
+      await persistElectionState(updatedElection);
+
       setAdminMessage(
-        `Agregasi selesai dari ${body.ledgerSize} receipt terenkripsi.`,
+        `Agregasi selesai dari ${body.ledgerSize} receipt terenkripsi. Hasil diteruskan ke papan pengumuman.`,
       );
       setIsDecrypting(false);
     } catch (err: any) {

@@ -2,8 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
+  Bar,
+  BarChart,
+  Cell,
   Line,
   LineChart,
+  ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
@@ -13,12 +17,14 @@ import {
   Check,
   Clock,
   Copy,
+  Crown,
   Download,
   KeyRound,
   LockKeyhole,
   ReceiptText,
   SearchCheck,
   ShieldCheck,
+  Trophy,
   Vote,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -290,6 +296,15 @@ export function CryptoVoteApp({ election }: CryptoVoteAppProps) {
     setReceiptActionMessage("Receipt TXT diunduh.");
   }
 
+  const validCandidates = (liveElection.candidates || []).filter(c => c.id !== "abstain");
+  const highestVotes = validCandidates.length > 0 
+    ? Math.max(...validCandidates.map(c => c.votes ?? 0))
+    : 0;
+
+  const isWinner = (candidateId: string, votes: number = 0) => {
+    return candidateId !== "abstain" && votes === highestVotes && highestVotes > 0;
+  };
+
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-[92rem] flex-col gap-5 px-4 py-4 sm:px-6 lg:px-8">
       <header className="counting-table rounded-lg border p-5 sm:p-7">
@@ -342,7 +357,73 @@ export function CryptoVoteApp({ election }: CryptoVoteAppProps) {
         </div>
       </header>
 
-      <section className="custody-rail grid gap-4 rounded-lg border p-4 shadow-sm sm:grid-cols-[1fr_auto]">
+      {liveElection.status === "closed" ? (
+        <section className="mt-2 rounded-lg border bg-card p-6 shadow-sm">
+          <div className="mb-8 text-center">
+            <h2 className="text-3xl font-black">Papan Pengumuman Rekapitulasi</h2>
+            <p className="text-muted-foreground mt-2">
+              Pemilihan telah ditutup secara resmi. Hasil agregasi homomorfik ElGamal telah didekripsi.
+            </p>
+          </div>
+
+          <div className="h-[28rem] w-full mt-6">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={(liveElection.candidates || []).map((c) => ({
+                  name: c.name,
+                  votes: c.votes || 0,
+                  color: c.color || "#000",
+                  id: c.id,
+                }))}
+                margin={{ top: 20, right: 0, left: -20, bottom: 0 }}
+              >
+                <XAxis dataKey="name" tick={{ fontSize: 13, fontWeight: 500 }} />
+                <YAxis allowDecimals={false} />
+                <Tooltip
+                  cursor={{ fill: "transparent" }}
+                  contentStyle={{ borderRadius: "8px", border: "1px solid #e2e8f0", fontWeight: 600 }}
+                  formatter={(value) => [`${value} suara`, "Perolehan"]}
+                />
+                <Bar dataKey="votes" radius={[6, 6, 0, 0]}>
+                  {(liveElection.candidates || []).map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color || "#000"} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {(liveElection.candidates || []).map(candidate => {
+              const winner = isWinner(candidate.id, candidate.votes);
+              return (
+                <div 
+                  key={candidate.id} 
+                  className={cn(
+                    "flex flex-col items-center justify-center rounded-xl border p-6 text-center shadow-sm transition-all",
+                    winner ? "border-amber-400 bg-amber-50/50 shadow-md ring-1 ring-amber-400/50 scale-[1.02]" : "bg-background"
+                  )}
+                >
+                  {winner && (
+                    <Badge className="mb-3 bg-amber-400 text-amber-950 hover:bg-amber-400 gap-1 px-3 py-1 text-xs font-bold">
+                      <Crown className="size-3.5" />
+                      PEMENANG
+                    </Badge>
+                  )}
+                  <p className="font-bold text-lg">{candidate.name}</p>
+                  <p className="text-sm font-medium text-muted-foreground mt-1">{candidate.party}</p>
+                  <p className="mt-4 text-3xl font-black" style={{ color: candidate.color }}>
+                    {candidate.votes || 0}
+                  </p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-widest mt-1">Suara</p>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      ) : (
+        <>
+          <section className="custody-rail grid gap-4 rounded-lg border p-4 shadow-sm sm:grid-cols-[1fr_auto]">
         <label className="grid gap-2 text-sm font-medium">
           Token Rahasia
           <input
@@ -701,6 +782,8 @@ export function CryptoVoteApp({ election }: CryptoVoteAppProps) {
           </CardContent>
         </Card>
       </section>
+        </>
+      )}
     </main>
   );
 }
