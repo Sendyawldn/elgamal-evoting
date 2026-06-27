@@ -79,7 +79,7 @@ export function AdminPanel({ election }: AdminPanelProps) {
     managedElection.title.trim() &&
     managedElection.description.trim() &&
     managedElection.region.trim() &&
-    managedElection.candidates.length >= 2 &&
+    managedElection.candidates.filter((c) => c.id !== "abstain").length >= 2 &&
     managedElection.authorizedVoters.length > 0,
   );
   const hasVotingSession =
@@ -150,9 +150,17 @@ export function AdminPanel({ election }: AdminPanelProps) {
       status === "open"
         ? "Pemilihan dibuka dan sesi aktif tersimpan. Halaman pemilih sudah bisa melihat kandidat."
         : status === "closed"
-          ? "Pemilihan selesai. Admin dapat mendekripsi hasil akhir."
+          ? "Pemilihan selesai. Silakan gulir ke bawah untuk melakukan Dekripsi Rekapitulasi Akhir sebelum menyimpan arsip."
           : "Pemilihan dikembalikan ke draft untuk pengaturan.",
     );
+
+    if (status === "closed") {
+      setTimeout(() => {
+        document
+          .getElementById("decryption-section")
+          ?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    }
 
     await persistElectionState(nextElection);
   }
@@ -351,7 +359,9 @@ export function AdminPanel({ election }: AdminPanelProps) {
       );
       setIsDecrypting(false);
     } catch (err: any) {
-      setAdminMessage(err.message ?? "Gagal menjalankan dekripsi rekapitulasi.");
+      setAdminMessage(
+        err.message ?? "Gagal menjalankan dekripsi rekapitulasi.",
+      );
       setAggregationLogs([]);
       setIsDecrypting(false);
     }
@@ -443,10 +453,12 @@ export function AdminPanel({ election }: AdminPanelProps) {
             <Button
               type="button"
               onClick={syncAdminState}
-              disabled={managedElection.status === "open"}
+              disabled={
+                managedElection.status !== "closed" || finalTally === null
+              }
             >
               <UserCheck className="size-4" aria-hidden="true" />
-              Simpan State
+              Simpan Sesi
             </Button>
           </div>
         </div>
@@ -694,7 +706,7 @@ export function AdminPanel({ election }: AdminPanelProps) {
         </Card>
       </section>
 
-      <Card className="seal-panel border-crypto/25">
+      <Card id="decryption-section" className="seal-panel border-crypto/25">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <KeyRound className="size-5 text-crypto" aria-hidden="true" />
@@ -712,7 +724,9 @@ export function AdminPanel({ election }: AdminPanelProps) {
             disabled={managedElection.status !== "closed" || isDecrypting}
           >
             <KeyRound className="size-4" aria-hidden="true" />
-            {isDecrypting ? "Memproses Rekapitulasi..." : "Dekripsi Rekapitulasi"}
+            {isDecrypting
+              ? "Memproses Rekapitulasi..."
+              : "Dekripsi Rekapitulasi"}
           </Button>
           <div
             className="rounded-md border bg-background p-3"

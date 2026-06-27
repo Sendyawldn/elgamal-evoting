@@ -100,6 +100,17 @@ export function CryptoVoteApp({ election }: CryptoVoteAppProps) {
     }
 
     loadElectionState();
+
+    const intervalId = setInterval(async () => {
+      try {
+        const body = await apiGet<{ election: Election }>("/api/admin/election");
+        setLiveElection(body.election);
+      } catch (err) {
+        // Abaikan error latar belakang
+      }
+    }, 3000);
+
+    return () => clearInterval(intervalId);
   }, []);
 
   const selectedCandidate = (liveElection.candidates || []).find(
